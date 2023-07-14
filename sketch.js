@@ -7,6 +7,12 @@ var pared1, pared2, pared3, suelo;
 var jugador;
 var plataforma1, plataforma2, pilar1, pilar2;
 var obstaculos;
+var jugadorimg,enemigoimg;
+
+var caballeroImgIzq, caballeroImgDer;
+var caballeroImgMA, caballeroImgMCD, caballeroImgMCI, caballeroImgMM, caballeroImgMS;
+
+var caballeroFlagMove = "D";
 
 
 function preload(){
@@ -16,6 +22,53 @@ function preload(){
 
   espadaIMG = loadImage("assets/espada.png");
 
+  //Animaciones para caballero estatico
+  caballeroImgDer = loadAnimation("assets/espada.png");
+  caballeroImgIzq = loadAnimation("assets/caballero quieto izquierda 1.png");
+
+  //Animaciones para caballero en movimiento
+  caballeroImgMA = loadAnimation(
+    "assets/caballero ataque 1.png",
+    "assets/caballero ataque 2.png",
+    "assets/caballero ataque 3.png",
+    "assets/caballero ataque 4.png",
+    "assets/caballero ataque 5.png",
+    "assets/caballero ataque 6.png",
+    "assets/caballero ataque 7.png",
+    "assets/caballero ataque 8.png",
+    "assets/caballero ataque 9.png",
+  );
+  caballeroImgMCD = loadAnimation(
+    "assets/caballero corre 1.png",
+    "assets/caballero corre 2.png",
+    "assets/caballero corre 3.png",
+    "assets/caballero corre 4.png",
+    "assets/caballero corre 5.png",
+    "assets/caballero corre 6.png",
+  );
+  caballeroImgMCI = loadAnimation(
+    "assets/caballero corre izquierda 1.png",
+    "assets/caballero corre izquierda 2.png",
+    "assets/caballero corre izquierda 3.png",
+    "assets/caballero corre izquierda 4.png",
+    "assets/caballero corre izquierda 5.png",
+    "assets/caballero corre izquierda 6.png",
+  );
+  caballeroImgMM = loadAnimation(
+    "assets/caballero muerte 1.png",
+    "assets/caballero muerte 2.png",
+    "assets/caballero muerte 3.png",
+    "assets/caballero muerte 4.png",
+  );
+  caballeroImgMS = loadAnimation(
+    "assets/caballero salto 1.png",
+    "assets/caballero salto 2.png",
+    "assets/caballero salto 3.png",
+    "assets/caballero salto 4.png",
+  );
+  
+
+
 }
 
 function setup() {
@@ -23,10 +76,23 @@ function setup() {
 
   // the background image
   bg = createSprite(1200/2-20,800/2-40,20,20)
-  bg.addImage(bgImg1);
+
+  //error con el Animation
+  bg.addAnimation(bgImg1);
+  bg.addAnimation(bgImg2);
+  bg.changeAnimation(bgImg1);
   bg.scale = 0.65
 
-  jugador = createSprite(displayWidth/2,displayHeight/2,20,20)
+  jugador = createSprite(50,600,20,20);
+  jugador.addAnimation("caballeroDer", caballeroImgDer);
+  //jugador.addAnimation("caballeroIzq", caballeroImgIzq);
+  //jugador.addAnimation("caballeroMA", caballeroImgMA);
+  //jugador.addAnimation("caballeroMCI", caballeroImgMCI);
+  //jugador.addAnimation("caballeroMM", caballeroImgMM);
+  //jugador.addAnimation("caballeroMS", caballeroImgMS);
+
+  //jugador.changeAnimation("caballeroDer", caballeroImgDer);
+  
 
   obstaculos = new Group();
   
@@ -65,35 +131,44 @@ function setup() {
 function draw() {
   background(0); 
 
-  console.log(jugador.x)
-  console.log(jugador.y)
+  //console.log(jugador.x)
+  //console.log(jugador.y)
 
   jugador.collide(obstaculos);
 
-  if (keyIsDown(UP_ARROW)) {
-    jugador.y -= 10;
+  if(caballeroFlagMove === "D"){
+    //jugador.changeAnimation("caballeroDer", caballeroImgDer);
   }
+  if(caballeroFlagMove === "I"){
+    //jugador.changeAnimation("caballeroIzq", caballeroImgIzq);
+  }
+  if(caballeroFlagMove === "S"){
+    //jugador.changeAnimation("caballeroMS", caballeroImgMS);
+  }
+
 
   if (keyIsDown(LEFT_ARROW)) {
     jugador.x -= 10;
+    //jugador.changeAnimation("caballeroMCI", caballeroImgMCI);
+    caballeroFlagMove = "I";
   }
   
   if (keyIsDown(RIGHT_ARROW)) {
     jugador.x += 10;
+    //jugador.changeAnimation("caballeroMCD", caballeroImgMCD);
+    caballeroFlagMove = "D";
   }
 
-  if (keyIsDown(DOWN_ARROW)) {
-    jugador.y += 10;
-  }
-
-  if(keyIsDown("space")){
+  if(keyIsDown(UP_ARROW)){
     jugador.velocityY = -20;
+    //jugador.changeAnimation("caballeroMS", caballeroImgMS);
+    caballeroFlagMove = "S";
   }
 
   jugador.velocityY = jugador.velocityY + 0.8;
 
   if(jugador.isTouching(espada)){
-    bg.changeImage(bgImg2);
+    bg.changeAnimation(bgImg2);
     espada.visible = false;
   }
 
