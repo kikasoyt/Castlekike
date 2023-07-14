@@ -87,10 +87,15 @@ function draw() {
   }
 
   if(keyIsDown("space")){
-    jugador.velocityY = -12;
+    jugador.velocityY = -20;
   }
 
   jugador.velocityY = jugador.velocityY + 0.8;
+
+  if(jugador.isTouching(espada)){
+    bg.changeImage(bgImg2);
+    espada.visible = false;
+  }
 
 
   drawSprites();
