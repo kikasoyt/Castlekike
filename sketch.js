@@ -9,12 +9,20 @@ var jugador;
 var plataforma1, plataforma2, pilar1, pilar2;
 var obstaculos;
 var jugadorimg,enemigoimg;
+var puerta;
+var fuego, fuegosGroup, fuegoImg, boomImg;
 
 var caballeroImgIzq, caballeroImgDer;
 var caballeroImgMA, caballeroImgMCD, caballeroImgMCI, caballeroImgMM, caballeroImgMS;
+var caballeroIsMoving = true;
 var contadorsalto = 0;
 var espadaActiva= false;
+var puertaActiva = false;
 var conteoGolpe = 0;
+var vidaC = 400;
+var vidaE = 15;
+
+var gameOver = false;
 
 
 var caballeroFlagMove = "D";
@@ -26,7 +34,9 @@ function preload(){
   bgImg2 = loadImage("assets/fondo 2.png");
 
   espadaIMG = loadImage("assets/espada.png");
-  enemigoimg = loadImage("assets/enemigo.png");
+  enemigoImg = loadImage("assets/enemigo.png");
+  fuegoImg = loadImage("assets/fuego.png");
+  boomImg = loadImage("assets/bomm.png");
 
   //Animaciones para caballero estatico
   caballeroImgDer = loadAnimation("assets/caballeroquieto1.png");
@@ -82,9 +92,9 @@ function setup() {
 
   // the background image
   bg = createSprite(1200/2,800/2-50,20,20)
-
-  //error con el Animation
-  bg.addAnimation(bgImg1);
+  bg.addAnimation("bgImg2",bgImg2);
+  bg.addAnimation("bgImg1",bgImg1);
+  bg.changeAnimation("bgImg1");
   bg.scale = 0.65;
 
   jugador = createSprite(50,550,20,20);
@@ -95,6 +105,7 @@ function setup() {
   jugador.addAnimation("caballeroMCD", caballeroImgMCD);
   jugador.addAnimation("caballeroMM", caballeroImgMM);
   jugador.addAnimation("caballeroMS", caballeroImgMS);
+  jugador.addAnimation("boom", boomImg);
   
 
   jugador.changeAnimation("caballeroDer");
@@ -103,6 +114,7 @@ function setup() {
   jugador.scale= 0.85;
 
   obstaculos = new Group();
+  fuegosGroup = new Group();
   
   // recordar que los sprites aparecen centrados en las coordenadas que les pongas
   plataforma1 = createSprite(240,455,246,40);
@@ -114,6 +126,7 @@ function setup() {
   LUp = createSprite(600,0,1500,10);
   LLeft = createSprite(0,350,10,800);
   LRight = createSprite(1200,350,10,800);
+  puerta = createSprite(1135,500,60,120);
 
   plataforma1.visible = false;
   plataforma2.visible = false;
@@ -124,6 +137,7 @@ function setup() {
   LUp.visible = false;
   LLeft.visible = false;
   LRight.visible = false;
+  puerta.visible = false;
 
 
   obstaculos.add(plataforma1);
@@ -140,7 +154,7 @@ function setup() {
   espada.scale = 0.8;
 
   enemigo1 = createSprite(1100,510,60,60);
-  enemigo1.addImage(enemigoimg);
+  enemigo1.addImage(enemigoImg);
   enemigo1.scale = 0.1;
   enemigo1.debug = true;
   enemigo1.setCollider('rectangle', 0, 0, 100,100);
@@ -157,58 +171,108 @@ function draw() {
 
   jugador.collide(obstaculos);
 
-  if(caballeroFlagMove === "D"){
-    jugador.changeAnimation("caballeroDer");
-  }
-  if(caballeroFlagMove === "I"){
-    jugador.changeAnimation("caballeroIzq");
-  }
-  if(caballeroFlagMove === "S"){
-    jugador.changeAnimation("caballeroMS");
-  }
+  if(gameOver === false){
+    if(caballeroIsMoving){
+      if(caballeroFlagMove === "D"){
+        jugador.changeAnimation("caballeroDer");
+      }
+      if(caballeroFlagMove === "I"){
+        jugador.changeAnimation("caballeroIzq");
+      }
+      if(caballeroFlagMove === "S"){
+        jugador.changeAnimation("caballeroMS");
+      }
 
 
-  if (keyIsDown(LEFT_ARROW)) {
-    jugador.x -= 10;
-    jugador.changeAnimation("caballeroMCI");
-    caballeroFlagMove = "I";
+      if (keyIsDown(LEFT_ARROW)) {
+        jugador.x -= 10;
+        jugador.changeAnimation("caballeroMCI");
+        caballeroFlagMove = "I";
+      }
+      
+      if (keyIsDown(RIGHT_ARROW)) {
+        jugador.x += 10;
+        jugador.changeAnimation("caballeroMCD");
+        caballeroFlagMove = "D";
+      }
+
+      if(keyIsDown(UP_ARROW)){
+        if(contadorsalto < 2){
+          contadorsalto += 1;
+          //console.log(contadorsalto);
+          jugador.velocityY = -12;
+          jugador.changeAnimation("caballeroMS");
+          caballeroFlagMove = "S";
+        }else{
+          contadorsalto = 0;
+          //console.log(contadorsalto);
+        }
+      }
+    }
+
+    jugador.velocityY = jugador.velocityY + 0.8;
+
+    if(jugador.isTouching(espada)){
+      bg.changeAnimation("bgImg2",bgImg2);
+      espada.visible = false;
+      espadaActiva = true;
+      enemigo1.visible = true;
+    }
+
+    if(jugador.isTouching(fuego)){
+      jugador.changeAnimation("boom");
+      jugador.scale=0.1;
+      caballeroIsMoving = false;
+    }
+
+    if(espadaActiva){
+      fuego.destroy();
+      if(keyDown("SPACE")){
+        jugador.changeAnimation("caballeroMA");
+
+        //este if no se ejecuta
+        if(jugador.isTouching(enemigo1)){
+          vidaE -= 1;
+          console.log(vidaE);
+        }
+      }
+      if(frameCount % 10000000000000000000000000000000000000000000 === 0){
+        fuegos();
+      }
+
+      if(vidaE <= 0){
+        enemigo1.destroy();
+        gameOver = true;
+      }
+
+      if(jugador.isTouching(fuegosGroup)){
+        vidaC-=1;
+      }
+
+      if(vidaC<=0){
+        jugador.changeAnimation("boom");
+        jugador.scale=0.1;
+        caballeroIsMoving = false;
+      }
+    }
+  }
+  if(gameOver === true){
+    textSize(200);
+    stroke("red");
+    text("Ganaste",400,500);
   }
   
-  if (keyIsDown(RIGHT_ARROW)) {
-    jugador.x += 10;
-    jugador.changeAnimation("caballeroMCD");
-    caballeroFlagMove = "D";
-  }
-
-  if(keyIsDown(UP_ARROW)){
-    if(contadorsalto < 2){
-      contadorsalto += 1;
-      //console.log(contadorsalto);
-      jugador.velocityY = -12;
-      jugador.changeAnimation("caballeroMS");
-      caballeroFlagMove = "S";
-    }else{
-      contadorsalto = 0;
-      //console.log(contadorsalto);
-    }
-  }
-
-  jugador.velocityY = jugador.velocityY + 0.8;
-
-  if(jugador.isTouching(espada)){
-    bg.changeAnimation(bgImg2);
-    espada.visible = false;
-    espadaActiva = true;
-    enemigo1.visible = true;
-  }
-
-  if(espadaActiva){
-    if(keyDown("SPACE")){
-      jugador.changeAnimation("caballeroMA");
-    }
-  }
-
 
   drawSprites();
 
+}
+
+
+function fuegos(){
+  fuego = createSprite(1200,random(450,550),10,10);
+  fuego.addImage(fuegoImg);
+  fuego.scale = 1;
+  fuego.velocityX = -8;
+  fuego.lifetime = 1000;
+  fuegosGroup.add(fuego);
 }
